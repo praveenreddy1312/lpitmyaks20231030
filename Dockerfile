@@ -1,21 +1,21 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS builder
 WORKDIR /app
-EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-WORKDIR /src
-COPY ["mytcsapp.csproj", "."]
-RUN dotnet restore "./mytcsapp.csproj"
+# caches restore result by copying csproj file separately
+COPY *.csproj .
+RUN dotnet restore
+
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "mytcsapp.csproj" -c Release -o /app/build
+RUN dotnet publish --output /app/ --configuration Release --no-restore
+RUN sed -n 's:.*<AssemblyName>\(.*\)</AssemblyName>.*:\1:p' *.csproj > __assemblyname
+RUN if [ ! -s __assemblyname ]; then filename=$(ls *.csproj); echo ${filename%.*} > __assemblyname; fi
 
-FROM build AS publish
-RUN dotnet publish "mytcsapp.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
+# Stage 2
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "mytcsapp.dll"]
+COPY --from=builder /app .
+
+ENV PORT 5000
+EXPOSE 5000
+
+ENTRYPOINT dotnet $(cat /app/__assemblyname).dll --urls "http://*:5000"
