@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mytcsapp1
+  name: mytcsapp20
   labels:
-    app: mytcsapp1
-  namespace: namespace-workflow-1698682385521
+    app: mytcsapp20
+  namespace: namespace-workflow-1698682582778
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mytcsapp1
+      app: mytcsapp20
   template:
     metadata:
       labels:
-        app: mytcsapp1
+        app: mytcsapp20
     spec:
       containers:
-        - name: mytcsapp1
-          image: acrworkflow1698682385521.azurecr.io/image-workflow-1698682385521:latest
+        - name: mytcsapp20
+          image: acrworkflow1698682582778.azurecr.io/image-workflow-1698682582778:latest
           ports:
             - containerPort: 5000
